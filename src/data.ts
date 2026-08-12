@@ -345,7 +345,9 @@ export const timelineMarkers = [
   { left: "89%", width: "5%", selected: false },
 ];
 
-export const initialChat: { who: "you" | "ai"; text: string }[] = [
+export type Message = { who: "you" | "ai"; text: string };
+
+export const initialChat: Message[] = [
   {
     who: "you",
     text: 'Trim clip 2 so it starts right on the "I fired myself" line.',
