@@ -114,8 +114,9 @@ export function Eyebrow({
 }
 
 /**
- * Stand-in for a video frame. The design draws diagonal hatching; a solid tone
- * plus a few offset bars reads the same at these sizes without an image asset.
+ * Stand-in for a video frame, matching the design's 45° hatch. React Native has
+ * no repeating-linear-gradient, so the stripes are Views in an oversized,
+ * rotated layer that is clipped back to the box.
  */
 export function MediaPlaceholder({
   style,
@@ -126,19 +127,21 @@ export function MediaPlaceholder({
   small?: boolean;
   children?: React.ReactNode;
 }) {
+  const band = small ? 6 : 9;
   return (
     <View
       style={[
-        {backgroundColor: small ? hatch.small : hatch.large, overflow: 'hidden'},
+        {backgroundColor: small ? hatch.small : hatch.large},
+        styles.clip,
         style,
       ]}>
-      <View style={StyleSheet.absoluteFill}>
-        {Array.from({length: 12}, (_, i) => (
+      <View style={styles.hatchLayer}>
+        {Array.from({length: 40}, (_, i) => (
           <View
             key={i}
             style={{
-              flex: 1,
-              backgroundColor: i % 2 ? 'rgba(0,0,0,0.22)' : 'transparent',
+              height: band,
+              backgroundColor: i % 2 ? 'rgba(0,0,0,0.30)' : 'transparent',
             }}
           />
         ))}
@@ -181,11 +184,10 @@ export function MeterBar({
   );
 }
 
-export type BadgeTone = 'ready' | 'pending' | 'neutral' | 'mint';
+export type BadgeTone = 'ready' | 'pending' | 'neutral';
 
 const badgeTones: Record<BadgeTone, {bg: string; color: string}> = {
   ready: {bg: 'rgba(45,212,191,0.15)', color: colors.mint},
-  mint: {bg: colors.mintFill, color: colors.mint},
   pending: {bg: 'rgba(124,92,255,0.18)', color: colors.lilac},
   neutral: {bg: colors.fillStrong, color: colors.muted},
 };
@@ -271,25 +273,17 @@ export function NavGlyph({size = 19, color}: {size?: number; color: string}) {
   );
 }
 
-export const text = StyleSheet.create({
-  h1: {
-    fontFamily: fonts.semibold,
-    fontSize: 21,
-    letterSpacing: -0.6,
-    color: colors.text,
-  },
-  h2: {
-    fontFamily: fonts.semibold,
-    fontSize: 16,
-    letterSpacing: -0.3,
-    color: colors.text,
-  },
-  body: {fontFamily: fonts.regular, fontSize: 13, color: colors.text},
-  muted: {fontFamily: fonts.regular, fontSize: 12, color: colors.muted},
-  meta: {fontFamily: fonts.mono, fontSize: 11, color: colors.dim},
-});
-
 const styles = StyleSheet.create({
+  clip: {overflow: 'hidden'},
+  /** Oversized so the 45° rotation still covers the corners of its parent. */
+  hatchLayer: {
+    position: 'absolute',
+    top: '-70%',
+    left: '-70%',
+    right: '-70%',
+    bottom: '-70%',
+    transform: [{rotate: '45deg'}],
+  },
   card: {
     borderRadius: radius.card,
     borderWidth: 1,

@@ -11,7 +11,11 @@ const metrics = [
   {label: 'Median score', value: '8.9'},
 ];
 
-/** The design shows the most recent five weeks on the phone. */
+/**
+ * The five most recent weeks, in calendar order. The design comp draws a rising
+ * ramp, but its bar heights are decorative — reordering real weekly counts to
+ * match would make the chart misstate the trend, so the data wins here.
+ */
 const recentWeeks = weeklyExports.slice(-5);
 const peak = Math.max(...recentWeeks);
 

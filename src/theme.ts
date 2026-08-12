@@ -31,7 +31,6 @@ export const colors = {
 
   accentFill: 'rgba(124,92,255,0.11)',
   accentBorder: 'rgba(124,92,255,0.26)',
-  mintFill: 'rgba(45,212,191,0.16)',
 } as const;
 
 /**

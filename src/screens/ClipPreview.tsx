@@ -18,10 +18,14 @@ export function ClipPreviewScreen() {
   const clip = clips[index];
   const [playing, setPlaying] = useState(true);
 
-  /** The design highlights the final word of the caption in mint. */
+  /**
+   * The design highlights the emphasised word — the one the caption writer
+   * shouted. Every caption in the set has exactly one all-caps word, so match
+   * that rather than assuming it is the last word.
+   */
   const words = clip.cap.split(' ');
-  const head = words.slice(0, -1).join(' ');
-  const tail = words[words.length - 1];
+  const shoutIndex = words.findIndex(w => /^[A-Z]{2,}$/.test(w));
+  const highlight = shoutIndex === -1 ? words.length - 1 : shoutIndex;
 
   return (
     <View style={styles.screen}>
@@ -43,7 +47,12 @@ export function ClipPreviewScreen() {
 
       <View style={styles.captionWrap}>
         <Text style={styles.caption}>
-          {head} <Text style={styles.captionHighlight}>{tail}</Text>
+          {words.map((w, i) => (
+            <Text key={i} style={i === highlight ? styles.captionHighlight : undefined}>
+              {i > 0 ? ' ' : ''}
+              {w}
+            </Text>
+          ))}
         </Text>
       </View>
 

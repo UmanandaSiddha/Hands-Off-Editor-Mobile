@@ -4,8 +4,9 @@ import {colors, fonts, radius} from '../theme';
 import {notifications} from '../data';
 
 export function NotificationsScreen() {
-  const [read, setRead] = useState<string[]>([]);
-  const allRead = read.length >= notifications.filter(n => n.unread).length;
+  /** A set, so tapping the same row twice cannot fake "all caught up". */
+  const [read, setRead] = useState<ReadonlySet<string>>(new Set());
+  const allRead = notifications.every(n => !n.unread || read.has(n.title));
 
   return (
     <View style={styles.screen}>
@@ -16,18 +17,18 @@ export function NotificationsScreen() {
         ListHeaderComponent={
           <Pressable
             style={styles.markAll}
-            onPress={() => setRead(notifications.map(n => n.title))}>
+            onPress={() => setRead(new Set(notifications.map(n => n.title)))}>
             <Text style={styles.markAllLabel}>
               {allRead ? 'All caught up' : 'Mark all read'}
             </Text>
           </Pressable>
         }
         renderItem={({item}) => {
-          const unread = item.unread && !read.includes(item.title);
+          const unread = item.unread && !read.has(item.title);
           return (
             <Pressable
               style={[styles.row, unread && styles.rowUnread]}
-              onPress={() => setRead(r => [...r, item.title])}>
+              onPress={() => setRead(r => new Set(r).add(item.title))}>
               <View style={[styles.dot, unread && styles.dotUnread]} />
               <View style={styles.copy}>
                 <Text style={styles.title}>{item.title}</Text>

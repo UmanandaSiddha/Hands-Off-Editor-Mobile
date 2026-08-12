@@ -1,4 +1,4 @@
-import React, {useMemo, useRef, useState} from 'react';
+import React, {useCallback, useMemo, useRef, useState} from 'react';
 import {
   Animated,
   Dimensions,
@@ -27,12 +27,18 @@ export function ClipDeckScreen() {
   const [top, setTop] = useState(0);
   const pan = useRef(new Animated.ValueXY()).current;
 
-  const advance = useMemo(
-    () => (direction: 1 | -1) => {
+  /**
+   * Every animation on `pan` must stay on the JS driver. PanResponder feeds the
+   * value through Animated.event, which is JS-driven; starting a native-driven
+   * animation on the same value throws "Attempting to run JS driven animation
+   * on same value as native animated animation".
+   */
+  const advance = useCallback(
+    (direction: 1 | -1) => {
       Animated.timing(pan, {
         toValue: {x: direction * SCREEN_WIDTH * 1.3, y: 0},
         duration: 220,
-        useNativeDriver: true,
+        useNativeDriver: false,
       }).start(() => {
         pan.setValue({x: 0, y: 0});
         setTop(i => (i + 1) % clips.length);
@@ -56,7 +62,7 @@ export function ClipDeckScreen() {
           } else {
             Animated.spring(pan, {
               toValue: {x: 0, y: 0},
-              useNativeDriver: true,
+              useNativeDriver: false,
               friction: 6,
             }).start();
           }

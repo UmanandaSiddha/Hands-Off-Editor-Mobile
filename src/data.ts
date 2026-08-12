@@ -323,15 +323,19 @@ export function stageFor(progress: number) {
   return stages[Math.min(stages.length - 1, Math.floor(progress / 21))];
 }
 
-/** Deterministic pseudo-waveform — same shape every render, no hydration drift. */
-export const waveform = Array.from(
-  { length: 64 },
-  (_, i) => 18 + Math.abs(Math.sin(i * 1.7)) * 62 + (i % 5) * 4,
+/**
+ * Deterministic pseudo-waveform. Values are rounded because they end up as CSS
+ * percentages: browsers round long decimals when parsing a style attribute, so
+ * unrounded values make React's SSR hydration diff fail.
+ */
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
+export const waveform = Array.from({ length: 64 }, (_, i) =>
+  round2(18 + Math.abs(Math.sin(i * 1.7)) * 62 + (i % 5) * 4),
 );
 
-export const miniWaveform = Array.from(
-  { length: 34 },
-  (_, i) => 22 + Math.abs(Math.cos(i * 1.3)) * 66,
+export const miniWaveform = Array.from({ length: 34 }, (_, i) =>
+  round2(22 + Math.abs(Math.cos(i * 1.3)) * 66),
 );
 
 /** Candidate-moment regions on the source timeline. */
@@ -363,10 +367,11 @@ export const initialChat: Message[] = [
   },
 ];
 
+/** Assistant shortcut chips: short label, full sentence actually sent. */
 export const quickPrompts = [
-  "Make captions more engaging",
-  "Find funnier moments",
-  "Add zoom effects",
+  { label: "Make captions more engaging", text: "Make the captions more engaging." },
+  { label: "Find funnier moments", text: "Find funnier moments in the second hour." },
+  { label: "Add zoom effects", text: "Add zoom effects on the punchlines." },
 ];
 
 export const user = {
@@ -380,7 +385,8 @@ export const user = {
 export const usage = {
   used: 412,
   total: 600,
+  /** Rounded for the same CSS-percentage hydration reason as the waveform. */
   get percent() {
-    return (this.used / this.total) * 100;
+    return Math.round((this.used / this.total) * 1000) / 10;
   },
 };

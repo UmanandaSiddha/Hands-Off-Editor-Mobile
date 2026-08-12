@@ -17,6 +17,9 @@ import {colors, fonts, radius} from '../theme';
 import type {Message} from '../data';
 import {initialChat, quickPrompts} from '../data';
 
+/** Index of the reply the "Preview updated" card belongs to. */
+const RESULT_CARD_AFTER = 3;
+
 /** The three-dot "thinking" indicator. */
 function TypingDots() {
   const dots = [useRef(new Animated.Value(1)).current, useRef(new Animated.Value(1)).current, useRef(new Animated.Value(1)).current];
@@ -79,6 +82,10 @@ export function AssistantScreen() {
     setChat(c => [...c, {who: 'you', text: message}]);
     setDraft('');
     setThinking(true);
+    // Drop any reply still in flight so two quick sends produce one answer.
+    if (replyTimer.current) {
+      clearTimeout(replyTimer.current);
+    }
     replyTimer.current = setTimeout(() => {
       setThinking(false);
       setChat(c => [
@@ -111,38 +118,42 @@ export function AssistantScreen() {
             scrollRef.current?.scrollToEnd({animated: true})
           }>
           {chat.map((m, i) => (
-            <View
-              key={i}
-              style={[
-                styles.bubble,
-                m.who === 'you' ? styles.bubbleYou : styles.bubbleAi,
-              ]}>
-              <Text
+            <React.Fragment key={i}>
+              <View
                 style={[
-                  styles.bubbleText,
-                  m.who === 'ai' && styles.bubbleTextAi,
+                  styles.bubble,
+                  m.who === 'you' ? styles.bubbleYou : styles.bubbleAi,
                 ]}>
-                {m.text}
-              </Text>
-            </View>
-          ))}
-
-          {/* Inline result card the design shows after an applied edit. */}
-          <View style={styles.resultCard}>
-            <MediaPlaceholder small style={styles.resultThumb} />
-            <View style={styles.flex}>
-              <Text style={styles.resultTitle}>Preview updated</Text>
-              <Text style={styles.resultMeta}>Score 9.1 → 9.3</Text>
-              <View style={styles.resultActions}>
-                <Pressable style={styles.keep}>
-                  <Text style={styles.keepLabel}>Keep</Text>
-                </Pressable>
-                <Pressable style={styles.undo}>
-                  <Text style={styles.undoLabel}>Undo</Text>
-                </Pressable>
+                <Text
+                  style={[
+                    styles.bubbleText,
+                    m.who === 'ai' && styles.bubbleTextAi,
+                  ]}>
+                  {m.text}
+                </Text>
               </View>
-            </View>
-          </View>
+
+              {/* The design pins the result card to the caption rewrite, so it
+                  stays put in the transcript rather than trailing every reply. */}
+              {i === RESULT_CARD_AFTER && (
+                <View style={styles.resultCard}>
+                  <MediaPlaceholder small style={styles.resultThumb} />
+                  <View style={styles.flex}>
+                    <Text style={styles.resultTitle}>Preview updated</Text>
+                    <Text style={styles.resultMeta}>Score 9.1 → 9.3</Text>
+                    <View style={styles.resultActions}>
+                      <Pressable style={styles.keep}>
+                        <Text style={styles.keepLabel}>Keep</Text>
+                      </Pressable>
+                      <Pressable style={styles.undo}>
+                        <Text style={styles.undoLabel}>Undo</Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                </View>
+              )}
+            </React.Fragment>
+          ))}
 
           {thinking && <TypingDots />}
         </ScrollView>
@@ -151,10 +162,10 @@ export function AssistantScreen() {
           <View style={styles.quickRow}>
             {quickPrompts.map(q => (
               <Pressable
-                key={q}
+                key={q.label}
                 style={styles.quickChip}
-                onPress={() => send(q)}>
-                <Text style={styles.quickLabel}>{q}</Text>
+                onPress={() => send(q.text)}>
+                <Text style={styles.quickLabel}>{q.label}</Text>
               </Pressable>
             ))}
           </View>
